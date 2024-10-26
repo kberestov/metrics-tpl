@@ -29,3 +29,7 @@ _golangci-lint-rm-unformatted-report: _golangci-lint-format-report
 .PHONY: golangci-lint-clean
 golangci-lint-clean:
 	rm -rf ./golangci-lint
+
+.PHONY: run-server
+run-server:
+	go run ./cmd/server/main.go

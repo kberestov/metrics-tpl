@@ -1,1 +1,1 @@
-POST http://localhost:8080/update/guage/ /10.5 HTTP/1.1
+POST http://localhost:8080/update/gauge/sdf/10.5 HTTP/1.1

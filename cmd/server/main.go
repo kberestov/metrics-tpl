@@ -17,11 +17,12 @@ func main() {
 }
 
 func run() error {
-	cfg := config.ServerConfig{RESTAddr: `:8080`}
-	memStore := store.NewMemStore()
-	server := services.NewServer(memStore)
+	cfg := config.Config{ServerAPIAddress: `:8080`}
 
-	api := rest.NewServerREST(cfg, server)
+	memStore := store.NewMemStore()
+	metricSvc := services.NewMetricService(memStore)
+
+	api := rest.NewServerAPI(cfg, metricSvc)
 	if err := api.Run(); err != nil {
 		return fmt.Errorf("failed to run REST API: %w", err)
 	}
