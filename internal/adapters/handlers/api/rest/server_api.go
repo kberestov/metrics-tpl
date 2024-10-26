@@ -49,16 +49,22 @@ type serverHandler struct {
 }
 
 func (h *serverHandler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
-	kind := r.PathValue(string(pvKind))
-	name := r.PathValue(string(pvName))
-
-	metric, err := domain.ParseMetric(kind, name)
+	k := r.PathValue(string(pvKind))
+	n := r.PathValue(string(pvName))
+	metric, err := domain.ParseMetric(k, n)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := h.metricSvc.Update(metric); err != nil {
+	v := r.PathValue(string(pvValue))
+	value, err := metric.ParseValue(v)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.metricSvc.UpdateValue(value); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

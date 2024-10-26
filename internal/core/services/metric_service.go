@@ -13,6 +13,6 @@ func NewMetricService(store ports.MetricStore) *MetricService {
 	return &MetricService{store: store}
 }
 
-func (s *MetricService) Update(m domain.Metric) error {
+func (s *MetricService) UpdateValue(v domain.MetricValue) error {
 	return nil
 }
