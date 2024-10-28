@@ -2,6 +2,7 @@ package rest
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/kberestov/metrics-tpl/internal/adapters/config"
@@ -49,25 +50,24 @@ type serverHandler struct {
 }
 
 func (h *serverHandler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
-	k := r.PathValue(string(pvKind))
-	n := r.PathValue(string(pvName))
-	metric, err := domain.ParseMetric(k, n)
+	kind := r.PathValue(string(pvKind))
+	name := r.PathValue(string(pvName))
+	value := r.PathValue(string(pvValue))
+
+	metricID, updateValue, err := domain.ParseMetric(kind, name, value)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	v := r.PathValue(string(pvValue))
-	value, err := metric.ParseValue(v)
+	updatedValue, err := h.metricSvc.Update(metricID, updateValue)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if err := h.metricSvc.UpdateValue(value); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte(updatedValue.String())); err != nil {
+		log.Printf("write failed: %v", err)
+	}
 }
