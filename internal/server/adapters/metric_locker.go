@@ -13,7 +13,9 @@ type MemMetricLocker struct {
 }
 
 func NewMemMetricLocker() *MemMetricLocker {
-	return &MemMetricLocker{}
+	return &MemMetricLocker{
+		mtxs: make(map[domain.MetricID]*sync.Mutex),
+	}
 }
 
 func (l *MemMetricLocker) Lock(id domain.MetricID) (unlock func()) {
