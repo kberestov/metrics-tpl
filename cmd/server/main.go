@@ -1,31 +1,55 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/kberestov/metrics-tpl/internal/adapters/config"
-	"github.com/kberestov/metrics-tpl/internal/adapters/handlers/api/rest"
-	"github.com/kberestov/metrics-tpl/internal/adapters/store"
-	"github.com/kberestov/metrics-tpl/internal/core/services"
+	"github.com/kberestov/metrics-tpl/internal/server/adapters"
+	"github.com/kberestov/metrics-tpl/internal/server/adapters/api/rest"
+	"github.com/kberestov/metrics-tpl/internal/server/adapters/store"
+	"github.com/kberestov/metrics-tpl/internal/server/config"
+	"github.com/kberestov/metrics-tpl/internal/server/core/services"
 )
 
 func main() {
-	if err := run(); err != nil {
-		log.Fatal(err)
+	log.Println("server: starting")
+
+	cfg := config.Config{RESTAddress: `:8080`}
+
+	metricSvc := services.NewMetricService(
+		store.NewMemStore(),
+		adapters.NewMemMetricLocker(),
+	)
+
+	restAPI := rest.NewAPI(cfg, metricSvc)
+
+	log.Printf("rest api: starting on %s\n", cfg.RESTAddress)
+	restAPI.Run()
+
+	chIntSig := make(chan os.Signal, 1)
+	defer close(chIntSig)
+	signal.Notify(chIntSig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case sig := <-chIntSig:
+		log.Printf("server: interrupted by signal: %v\n", sig)
+	case err := <-restAPI.Notify():
+		if !errors.Is(err, http.ErrServerClosed) {
+			log.Println(fmt.Errorf("rest api: error occured: %w", err))
+		}
 	}
-}
 
-func run() error {
-	cfg := config.Config{ServerAPIAddress: `:8080`}
+	log.Println("rest api: shutting down")
 
-	memStore := store.NewMemStore()
-	metricSvc := services.NewMetricService(memStore)
-
-	api := rest.NewServerAPI(cfg, metricSvc)
-	if err := api.Run(); err != nil {
-		return fmt.Errorf("failed to run REST API: %w", err)
+	err := restAPI.Shutdown()
+	if err != nil {
+		log.Println(fmt.Errorf("rest api: failed to shutdown: %w", err))
 	}
 
-	return nil
+	log.Println("server: done")
 }
