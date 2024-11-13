@@ -18,10 +18,6 @@ type handler struct {
 func (h *handler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
 	const op = "rest.handler.UpdateMetric"
 
-	logError := func(err error) {
-		log.Println(fmt.Errorf("%s: %w", op, err))
-	}
-
 	kind := r.PathValue(string(pvMetricKind))
 	name := r.PathValue(string(pvMetricName))
 	value := r.PathValue(string(pvMetricValue))
@@ -36,7 +32,7 @@ func (h *handler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 
-		logError(err)
+		log.Println(fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
