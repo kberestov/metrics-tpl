@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/kberestov/metrics-tpl/internal/server/adapters/api/rest"
-	"github.com/kberestov/metrics-tpl/internal/server/adapters/store"
+	"github.com/kberestov/metrics-tpl/internal/server/adapters/stores"
 	"github.com/kberestov/metrics-tpl/internal/server/config"
 	"github.com/kberestov/metrics-tpl/internal/server/core/services"
 )
@@ -19,13 +19,13 @@ func main() {
 func run() error {
 	cfg := config.Config{RESTAddress: `:8080`}
 
-	metricSvc := services.NewMetricService(
-		store.NewMemStore(),
+	updater := services.NewMetricUpdater(
+		stores.NewMemStore(),
 	)
 
-	restAPI := rest.NewAPI(cfg, metricSvc)
+	restAPI := rest.New(cfg, updater)
 
-	// TODO: Implement graceful shutdown and reaction on OS signals.
+	// TODO: Implement graceful shutdown with reaction on OS signals.
 	if err := restAPI.Run(); err != nil {
 		return fmt.Errorf("failed to run REST API: %w", err)
 	}

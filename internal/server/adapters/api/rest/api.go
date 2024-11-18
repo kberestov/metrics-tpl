@@ -20,13 +20,19 @@ type API struct {
 	srv *http.Server
 }
 
-func NewAPI(cfg config.Config, metricSvc ports.MetricService) *API {
-	handler := &handler{metricSvc: metricSvc}
+func New(cfg config.Config, u ports.MetricUpdater) *API {
+	h := &handler{updater: u}
 
 	router := http.NewServeMux()
+
 	router.HandleFunc(
-		fmt.Sprintf("POST /update/{%s}/{%s}/{%s}", pvMetricKind, pvMetricName, pvMetricValue),
-		handler.UpdateMetric,
+		fmt.Sprintf(
+			"POST /update/{%s}/{%s}/{%s}",
+			pvMetricKind,
+			pvMetricName,
+			pvMetricValue,
+		),
+		h.UpdateMetric,
 	)
 
 	return &API{
@@ -38,10 +44,8 @@ func NewAPI(cfg config.Config, metricSvc ports.MetricService) *API {
 }
 
 func (api *API) Run() error {
-	const op = "rest.API.Run"
-
 	if err := api.srv.ListenAndServe(); err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("failed to run HTTP server: %w", err)
 	}
 
 	return nil

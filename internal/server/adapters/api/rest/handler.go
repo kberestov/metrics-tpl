@@ -1,8 +1,6 @@
 package rest
 
 import (
-	"errors"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -11,28 +9,37 @@ import (
 )
 
 type handler struct {
-	metricSvc ports.MetricService
+	updater ports.MetricUpdater
 }
 
+// UpdateMetric handles the request:
 // POST /update/{pvMetricKind}/{pvMetricName}/{pvMetricValue}
 func (h *handler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
-	const op = "rest.handler.UpdateMetric"
+	k, err := domain.ParseMetricKind(r.PathValue(string(pvMetricKind)))
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-	kind := r.PathValue(string(pvMetricKind))
-	name := r.PathValue(string(pvMetricName))
-	value := r.PathValue(string(pvMetricValue))
+	n, err := domain.ParseMetricName(r.PathValue(string(pvMetricName)))
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-	if err := h.metricSvc.Update(kind, name, value); err != nil {
-		switch {
-		case errors.Is(err, domain.ErrUnknownMetricKind),
-			errors.Is(err, domain.ErrInvalidMetricName),
-			errors.Is(err, domain.ErrInvalidMetricValue):
-			w.WriteHeader(http.StatusBadRequest)
-		default:
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	v, err := domain.ParseMetricValue(k, r.PathValue(string(pvMetricValue)))
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-		log.Println(fmt.Errorf("%s: %w", op, err))
+	log.Printf("updating metric \"%v\" with value \"%v\"", n, v)
+	if err := h.updater.Update(n, v); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

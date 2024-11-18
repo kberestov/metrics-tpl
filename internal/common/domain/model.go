@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -40,25 +41,49 @@ func ParseMetricName(s string) (MetricName, error) {
 	return MetricName(s), nil
 }
 
+type MetricValue interface {
+	fmt.Stringer
+	Kind() MetricKind
+}
+
 type (
 	CounterValue int64
 	GaugeValue   float64
 )
 
-func ParseCounterValue(s string) (CounterValue, error) {
-	v, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		var zero CounterValue
-		return zero, ErrInvalidMetricValue
-	}
-	return CounterValue(v), nil
+func (v CounterValue) Kind() MetricKind {
+	return KindCounter
 }
 
-func ParseGaugeValue(s string) (GaugeValue, error) {
-	v, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		var zero GaugeValue
-		return zero, ErrInvalidMetricValue
+func (v CounterValue) String() string {
+	return fmt.Sprintf("%d", v)
+}
+
+func (v GaugeValue) Kind() MetricKind {
+	return KindGauge
+}
+
+func (v GaugeValue) String() string {
+	return fmt.Sprintf("%f", v)
+}
+
+func ParseMetricValue(k MetricKind, s string) (MetricValue, error) {
+	switch k {
+	case KindCounter:
+		v, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			var zero CounterValue
+			return zero, ErrInvalidMetricValue
+		}
+		return CounterValue(v), nil
+	case KindGauge:
+		v, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			var zero GaugeValue
+			return zero, ErrInvalidMetricValue
+		}
+		return GaugeValue(v), nil
+	default:
+		return nil, ErrUnknownMetricKind
 	}
-	return GaugeValue(v), nil
 }
