@@ -13,7 +13,7 @@ type handler struct {
 }
 
 // UpdateMetric handles the request:
-// POST /update/{pvMetricKind}/{pvMetricName}/{pvMetricValue}
+// POST /update/{pvMetricKind}/{pvMetricName}/{pvMetricValue}.
 func (h *handler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
 	k, err := domain.ParseMetricKind(r.PathValue(string(pvMetricKind)))
 	if err != nil {

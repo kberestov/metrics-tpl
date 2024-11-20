@@ -11,5 +11,8 @@ type MetricStore interface {
 	GetValue(n domain.MetricName) (domain.MetricValue, error)
 
 	// SaveValue saves the given value of a metric with the given name.
+	// Returns ErrNoMetricValue if the value is not present.
+	// Returns ErrMetricValueKindMismatch if the metric already has
+	// a value of another kind.
 	SaveValue(n domain.MetricName, v domain.MetricValue) error
 }

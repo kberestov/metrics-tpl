@@ -50,7 +50,6 @@ func NewMetricReporter(c ports.MetricServerClient) *MetricReporter {
 }
 
 func (r *MetricReporter) Report() {
-	log.Println("reporter: starting procedure")
 	for _, m := range reportableMetrics {
 		go func() {
 			// Remember the current value to perform correction

@@ -1,7 +1,6 @@
 package services
 
 import (
-	"log"
 	"math/rand/v2"
 	"runtime"
 
@@ -16,8 +15,6 @@ func NewMetricPoller() *MetricPoller {
 }
 
 func (p *MetricPoller) Poll() {
-	log.Println("poller: starting procedure")
-
 	// RandomValue
 	metrics.RandomValue.Set(rand.Float64())
 

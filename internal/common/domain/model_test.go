@@ -99,49 +99,57 @@ func TestParseMetricName(t *testing.T) {
 	}
 }
 
-/*
-func TestParseCounterValue(t *testing.T) {
-	var zeroValue CounterValue
+func TestParseMetricValue(t *testing.T) {
+	type args struct {
+		k MetricKind
+		s string
+	}
 	tests := []struct {
 		name    string
-		arg     string
-		want    CounterValue
+		args    args
+		want    MetricValue
 		wantErr error
 	}{
 		{
-			name:    "positive integer",
-			arg:     "12345",
-			want:    CounterValue(12345),
+			name:    "valid counter",
+			args:    args{KindCounter, "123"},
+			want:    CounterValue(123),
 			wantErr: nil,
 		},
 		{
-			name:    "negative integer",
-			arg:     "-100",
-			want:    CounterValue(-100),
+			name:    "valid gauge",
+			args:    args{KindGauge, "123.56"},
+			want:    GaugeValue(123.56),
 			wantErr: nil,
 		},
 		{
-			name:    "empty value",
-			arg:     "",
-			want:    zeroValue,
+			name:    "float counter",
+			args:    args{KindCounter, "123.56"},
+			want:    nil,
 			wantErr: ErrInvalidMetricValue,
 		},
 		{
-			name:    "float",
-			arg:     "100.56",
-			want:    zeroValue,
+			name:    "empty counter value",
+			args:    args{KindCounter, ""},
+			want:    nil,
+			wantErr: ErrInvalidMetricValue,
+		},
+		{
+			name:    "empty gauge value",
+			args:    args{KindGauge, ""},
+			want:    nil,
 			wantErr: ErrInvalidMetricValue,
 		},
 		{
 			name:    "not a number",
-			arg:     "hello",
-			want:    zeroValue,
+			args:    args{KindCounter, "abcd"},
+			want:    nil,
 			wantErr: ErrInvalidMetricValue,
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			res, err := ParseCounterValue(test.arg)
+			res, err := ParseMetricValue(test.args.k, test.args.s)
 			if test.wantErr == nil {
 				require.NoError(t, err)
 				assert.EqualValues(t, test.want, res)
@@ -152,61 +160,12 @@ func TestParseCounterValue(t *testing.T) {
 	}
 }
 
-func TestParseGaugeValue(t *testing.T) {
-	var zeroValue GaugeValue
-	tests := []struct {
-		name    string
-		arg     string
-		want    GaugeValue
-		wantErr error
-	}{
-		{
-			name:    "integer",
-			arg:     "12345",
-			want:    GaugeValue(12345),
-			wantErr: nil,
-		},
-		{
-			name:    "positive float",
-			arg:     "100.456",
-			want:    GaugeValue(100.456),
-			wantErr: nil,
-		},
-		{
-			name:    "negative float",
-			arg:     "-23.45",
-			want:    GaugeValue(-23.45),
-			wantErr: nil,
-		},
-		{
-			name:    "empty",
-			arg:     "",
-			want:    zeroValue,
-			wantErr: ErrInvalidMetricValue,
-		},
-		{
-			name:    "empty",
-			arg:     "",
-			want:    zeroValue,
-			wantErr: ErrInvalidMetricValue,
-		},
-		{
-			name:    "not a number",
-			arg:     "hello",
-			want:    zeroValue,
-			wantErr: ErrInvalidMetricValue,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			res, err := ParseGaugeValue(test.arg)
-			if test.wantErr == nil {
-				require.NoError(t, err)
-				assert.EqualValues(t, test.want, res)
-				return
-			}
-			require.ErrorIs(t, err, test.wantErr)
-		})
-	}
+func TestCounterValue_Kind(t *testing.T) {
+	var v CounterValue
+	require.EqualValues(t, KindCounter, v.Kind())
 }
-*/
+
+func TestGaugeValue_Kind(t *testing.T) {
+	var v GaugeValue
+	require.EqualValues(t, KindGauge, v.Kind())
+}

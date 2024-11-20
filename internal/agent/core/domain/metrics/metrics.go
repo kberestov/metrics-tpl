@@ -53,7 +53,6 @@ func (g *Gauge) Set(value float64) {
 	g.v = value
 }
 
-// Supported metrics:
 var (
 	PollCount     = NewCounter("PollCount")
 	RandomValue   = NewGauge("RandomValue")

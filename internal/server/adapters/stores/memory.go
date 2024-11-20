@@ -1,7 +1,6 @@
 package stores
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/kberestov/metrics-tpl/internal/common/domain"
@@ -33,11 +32,16 @@ func (s *MemStore) GetValue(n domain.MetricName) (domain.MetricValue, error) {
 
 func (s *MemStore) SaveValue(n domain.MetricName, v domain.MetricValue) error {
 	if v == nil {
-		return errors.New("no metric value provided")
+		return ports.ErrNoMetricValue
 	}
 
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
+
+	val, ok := s.vals[n]
+	if ok && val.Kind() != v.Kind() {
+		return ports.ErrMetricValueKindMismatch
+	}
 
 	s.vals[n] = v
 

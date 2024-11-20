@@ -19,7 +19,7 @@ func NewMetricUpdater(s ports.MetricStore) *MetricUpdater {
 // TODO: Think about idempotency for the use case.
 func (u *MetricUpdater) Update(n domain.MetricName, v domain.MetricValue) error {
 	if v == nil {
-		return errors.New("no metric value provided")
+		return ports.ErrNoMetricValue
 	}
 
 	var newVal domain.MetricValue
@@ -30,18 +30,15 @@ func (u *MetricUpdater) Update(n domain.MetricName, v domain.MetricValue) error 
 		//       when the same counter is being updated in multiple routines
 		//       to avoid data racing.
 		updatingVal := v.(domain.CounterValue)
-
 		currentVal, err := u.store.GetValue(n)
 		if err != nil {
 			if !errors.Is(err, ports.ErrMetricNotFound) {
 				return fmt.Errorf("failed to get metric value: %w", err)
 			}
 		}
-
-		if currentVal == nil {
-			newVal = updatingVal
-		} else {
-			newVal = currentVal.(domain.CounterValue) + updatingVal
+		newVal, err = calcNewCounterValue(currentVal, updatingVal)
+		if err != nil {
+			return err
 		}
 	case domain.KindGauge:
 		newVal = v.(domain.GaugeValue)
@@ -54,4 +51,17 @@ func (u *MetricUpdater) Update(n domain.MetricName, v domain.MetricValue) error 
 	}
 
 	return nil
+}
+
+func calcNewCounterValue(curr domain.MetricValue, upd domain.CounterValue) (domain.MetricValue, error) {
+	if curr == nil {
+		return upd, nil
+	}
+
+	c, ok := curr.(domain.CounterValue)
+	if !ok {
+		return nil, ports.ErrMetricValueKindMismatch
+	}
+
+	return c + upd, nil
 }
