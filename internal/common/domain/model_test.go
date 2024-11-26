@@ -146,6 +146,12 @@ func TestParseMetricValue(t *testing.T) {
 			want:    nil,
 			wantErr: ErrInvalidMetricValue,
 		},
+		{
+			name:    "unknown kind",
+			args:    args{MetricKind("unknown"), "abcd"},
+			want:    nil,
+			wantErr: ErrUnknownMetricKind,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

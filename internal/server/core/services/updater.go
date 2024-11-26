@@ -26,9 +26,8 @@ func (u *MetricUpdater) Update(n domain.MetricName, v domain.MetricValue) error 
 
 	switch v.Kind() {
 	case domain.KindCounter:
-		// TODO: Here should be some sort of sync for the case
-		//       when the same counter is being updated in multiple routines
-		//       to avoid data racing.
+		// TODO: Here should be some sort of sync to avoid data racing
+		//       it case when the same counter is being updated in multiple routines.
 		updatingVal := v.(domain.CounterValue)
 		currentVal, err := u.store.GetValue(n)
 		if err != nil {

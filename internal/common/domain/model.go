@@ -41,6 +41,7 @@ func ParseMetricName(s string) (MetricName, error) {
 	return MetricName(s), nil
 }
 
+//go:generate go run github.com/vektra/mockery/v2@v2.48.0 --name=MetricValue
 type MetricValue interface {
 	fmt.Stringer
 	Kind() MetricKind

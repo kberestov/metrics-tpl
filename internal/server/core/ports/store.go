@@ -5,6 +5,8 @@ import (
 )
 
 // A MetricStore represents a storage for metrics.
+//
+//go:generate go run github.com/vektra/mockery/v2@v2.48.0 --name=MetricStore
 type MetricStore interface {
 	// GetValue returns a value of a metric with the given name.
 	// Returns ErrMetricNotFound if no metric found.

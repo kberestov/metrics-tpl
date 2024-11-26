@@ -38,8 +38,8 @@ func (s *MemStore) SaveValue(n domain.MetricName, v domain.MetricValue) error {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 
-	val, ok := s.vals[n]
-	if ok && val.Kind() != v.Kind() {
+	currVal, ok := s.vals[n]
+	if ok && currVal.Kind() != v.Kind() {
 		return ports.ErrMetricValueKindMismatch
 	}
 
